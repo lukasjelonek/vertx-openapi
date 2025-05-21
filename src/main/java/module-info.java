@@ -13,6 +13,7 @@ module io.vertx.openapi {
   exports io.vertx.openapi.contract;
   exports io.vertx.openapi.validation;
   exports io.vertx.openapi.validation.transformer;
+  exports io.vertx.openapi.validation.mediatypes;
 
   exports io.vertx.openapi.impl to io.vertx.tests;
   exports io.vertx.openapi.validation.impl to io.vertx.tests;
