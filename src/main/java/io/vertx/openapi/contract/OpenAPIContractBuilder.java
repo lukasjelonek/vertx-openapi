@@ -10,6 +10,7 @@ import io.vertx.json.schema.JsonSchema;
 import io.vertx.json.schema.JsonSchemaValidationException;
 import io.vertx.openapi.contract.impl.OpenAPIContractImpl;
 import io.vertx.openapi.impl.Utils;
+import io.vertx.openapi.mediatype.MediaTypeRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ public class OpenAPIContractBuilder {
   private JsonObject contract;
   private final Map<String, String> additionalContentFiles = new HashMap<>();
   private final Map<String, JsonObject> additionalContent = new HashMap<>();
+  private MediaTypeRegistry registry;
 
   public OpenAPIContractBuilder(Vertx vertx) {
     this.vertx = vertx;
@@ -110,6 +112,11 @@ public class OpenAPIContractBuilder {
     return this;
   }
 
+  public OpenAPIContractBuilder mediaTypeRegistry(MediaTypeRegistry registry) {
+    this.registry = registry;
+    return this;
+  }
+
   private void checkDuplicateKeys(String key) {
     if (additionalContentFiles.containsKey(key) || additionalContent.containsKey(key)) {
       throw new OpenAPIContractBuilderException(String.format("The key '%s' has been added twice.", key));
@@ -125,6 +132,7 @@ public class OpenAPIContractBuilder {
     if (contractFile == null && contract == null) {
       return Future.failedFuture(new OpenAPIContractBuilderException("Neither a contract file or a contract is set. One of them must be set."));
     }
+    if (this.registry == null) this.registry = MediaTypeRegistry.createDefault();
 
     Future<JsonObject> readContract = contractFile == null
       ? Future.succeededFuture(contract)
@@ -181,7 +189,7 @@ public class OpenAPIContractBuilder {
               return failedFuture(createInvalidContract(null, e));
             }
           })
-          .map(resolvedSpec -> new OpenAPIContractImpl(resolvedSpec,version,repository))
+          .map(resolvedSpec -> new OpenAPIContractImpl(resolvedSpec, version, repository, registry))
       ).recover(e -> {
         //Convert any non-openapi exceptions into an OpenAPIContractException
         if (e instanceof OpenAPIContractException) {
